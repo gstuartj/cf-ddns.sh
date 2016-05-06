@@ -1,6 +1,6 @@
 #!/bin/sh
-# cf-ddns.sh - https://githuburl
-# A simple, portable DDNS client for CloudFlare API v4 meant for use w/ cron
+# cf-ddns.sh - https://github.com/gstuartj/cf-ddns.sh/
+# A minimal, portable DDNS client for CloudFlare API v4 meant for use w/ cron
 # Requires: curl (w/ HTTPS support and CA certificates installed), grep, awk
 
 #Configuration - these options can be hard-coded or passed as parameters
