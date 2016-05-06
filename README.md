@@ -1,5 +1,9 @@
 # cf-ddns.sh
+<<<<<<< HEAD
 A minimal, portable DDNS client for automatically updating CloudFlare's DNS service to point to your current IP.
+=======
+A minimal, portable DDNS client for automatically updating CloudFlare DNS with your current IP address
+>>>>>>> b73d09e5db02fd2f5a23257dc2d7e39c436424aa
 
 Prerequisites
 ------------
