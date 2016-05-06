@@ -19,19 +19,19 @@ Or:
 
 Required parameters
 ------------
-> -e=, --email=         CloudFlare account email
- -a=, --apikey=        CloudFlare account API key
- -z=, --zonename=      Zone name in the form of subdomain.domain.tld
-   OR
- -y=, --zoneid=        CloudFlare zone ID
- -r=, --recordname=    Record name in the form of subdomain.domain.tld
-   OR
- -q=, --recordid=      CloudFlare record ID
+ -e=, --email=         CloudFlare account email  
+ -a=, --apikey=        CloudFlare account API key  
+ -z=, --zonename=      Zone name in the form of subdomain.domain.tld  
+   OR  
+ -y=, --zoneid=        CloudFlare zone ID  
+ -r=, --recordname=    Record name in the form of subdomain.domain.tld  
+   OR  
+ -q=, --recordid=      CloudFlare record ID  
 
 Options
 ------------
- -f, --force           Force a DNS update, even if WAN IP hasn't changed
- -w=, --wan=           Manually specify WAN IP address, skip detection
- --get-zone-id         Print zone ID corresponding to zone name and exit
- --get-record-id       Print record ID corresponding to record name and exit
- -h, --help            Print this message and exit
+ -f, --force           Force a DNS update, even if WAN IP hasn't changed  
+ -w=, --wan=           Manually specify WAN IP address, skip detection  
+ --get-zone-id         Print zone ID corresponding to zone name and exit  
+ --get-record-id       Print record ID corresponding to record name and exit  
+ -h, --help            Print this message and exit  
