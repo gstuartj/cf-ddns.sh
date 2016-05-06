@@ -6,7 +6,7 @@
 helptext=`cat << ENDHELP
 Usage: cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -z=ZONENAME -r=RECORDNAME
   Or:  cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -y=ZONEID -q=RECORDID
-A simple, portable DDNS client for CloudFlare
+A minimal, portable DDNS client for CloudFlare
 
 Required
   -e=, --email=         CloudFlare account email
@@ -18,7 +18,7 @@ Required
     OR
   -q=, --recordid=      CloudFlare record ID
 
-OPTIONS
+Options
   -f, --force           Force a DNS update, even if WAN IP hasn't changed
   -w=, --wan=           Manually specify WAN IP address, skip detection
   --get-zone-id         Print zone ID corresponding to zone name and exit
