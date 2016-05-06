@@ -19,7 +19,7 @@ Or:
 
 Required parameters
 ------------
- -e=, --email=         CloudFlare account email
+> -e=, --email=         CloudFlare account email
  -a=, --apikey=        CloudFlare account API key
  -z=, --zonename=      Zone name in the form of subdomain.domain.tld
    OR
@@ -28,7 +28,8 @@ Required parameters
    OR
  -q=, --recordid=      CloudFlare record ID
 
-OPTIONS
+Options
+------------
  -f, --force           Force a DNS update, even if WAN IP hasn't changed
  -w=, --wan=           Manually specify WAN IP address, skip detection
  --get-zone-id         Print zone ID corresponding to zone name and exit
