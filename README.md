@@ -30,10 +30,10 @@ Required parameters
 
 Options
 ------------
-  -f, --force		Force a DNS update, even if WAN IP hasn't changed
+  -f, --force		Force a DNS update, even if WAN IP hasn't changed  
   -t, --test		Test action without updating DNS record  
-  -w=, --wan=		Manually specify WAN IP address, skip detection
+  -w=, --wan=		Manually specify WAN IP address, skip detection  
   --get-wan-ip		Determine the WAN IP, print it, and exit  
-  --get-zone-id		Print zone ID corresponding to zone name and exit
-  --get-record-id	Print record ID corresponding to record name and exit
-  -h, --help		Print this message and exit
+  --get-zone-id		Print zone ID corresponding to zone name and exit  
+  --get-record-id	Print record ID corresponding to record name and exit  
+  -h, --help		Print this message and exit  
