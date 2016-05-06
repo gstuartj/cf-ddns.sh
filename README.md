@@ -12,7 +12,9 @@ Download somewhere on your system and create a cron job to run the script with y
 Usage
 ------------
 > cf-ddns.sh \[OPTION\] -e=EMAIL -a=APIKEY -z=ZONENAME -r=RECORDNAME
+
 Or:
+
 > cf-ddns.sh \[OPTION\] -e=EMAIL -a=APIKEY -y=ZONEID -q=RECORDID
 
 Required parameters
