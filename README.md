@@ -1,5 +1,5 @@
 # cf-ddns.sh
-A minimal, portable DDNS client for automatically updating CloudFlare
+A minimal, portable DDNS client for automatically updating CloudFlare DNS with your current IP
 
 Prerequisites
 ------------
