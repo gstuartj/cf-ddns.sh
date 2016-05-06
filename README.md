@@ -1,9 +1,5 @@
 # cf-ddns.sh
-<<<<<<< HEAD
 A minimal, portable DDNS client for automatically updating CloudFlare's DNS service to point to your current IP.
-=======
-A minimal, portable DDNS client for automatically updating CloudFlare DNS with your current IP address
->>>>>>> b73d09e5db02fd2f5a23257dc2d7e39c436424aa
 
 Prerequisites
 ------------
@@ -35,9 +31,9 @@ Required parameters
 Options
 ------------
   -f, --force		Force a DNS update, even if WAN IP hasn't changed
-  -t, --test		Test action without updating DNS record
+  -t, --test		Test action without updating DNS record  
   -w=, --wan=		Manually specify WAN IP address, skip detection
-  --get-wan-ip		Determine the WAN IP, print it, and exit
+  --get-wan-ip		Determine the WAN IP, print it, and exit  
   --get-zone-id		Print zone ID corresponding to zone name and exit
   --get-record-id	Print record ID corresponding to record name and exit
   -h, --help		Print this message and exit
