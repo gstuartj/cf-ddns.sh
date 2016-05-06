@@ -1,7 +1,31 @@
 #!/bin/sh
 # cf-ddns.sh - https://github.com/gstuartj/cf-ddns.sh/
 # A minimal, portable DDNS client for CloudFlare API v4 meant for use w/ cron
-# Requires: curl (w/ HTTPS support and CA certificates installed), grep, awk
+# Requires: curl (w/ HTTPS support), grep, awk
+
+helptext=`cat << ENDHELP
+Usage: cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -z=ZONENAME -r=RECORDNAME
+  Or:  cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -y=ZONEID -q=RECORDID
+A simple, portable DDNS client for CloudFlare
+
+Required
+  -e=, --email=         CloudFlare account email
+  -a=, --apikey=        CloudFlare account API key
+  -z=, --zonename=      Zone name in the form of subdomain.domain.tld
+    OR
+  -y=, --zoneid=        CloudFlare zone ID
+  -r=, --recordname=    Record name in the form of subdomain.domain.tld
+    OR
+  -q=, --recordid=      CloudFlare record ID
+
+OPTIONS
+  -f, --force           Force a DNS update, even if WAN IP hasn't changed
+  -w=, --wan=           Manually specify WAN IP address, skip detection
+  --get-zone-id         Print zone ID corresponding to zone name and exit
+  --get-record-id       Print record ID corresponding to record name and exit
+  -h, --help            Print this message and exit
+ENDHELP`
+
 
 #Configuration - these options can be hard-coded or passed as parameters
 ###############
@@ -38,28 +62,7 @@ force=false
 cf_api_url='https://api.cloudflare.com/client/v4/'
 #END CONFIGURATION
 
-helptext=`cat << ENDHELP
-Usage: cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -z=ZONENAME -r=RECORDNAME
-  Or:  cf-ddns.sh [OPTION] -e=EMAIL -a=APIKEY -y=ZONEID -q=RECORDID
-A simple, portable DDNS client for CloudFlare
 
-Required
-  -e=, --email=		CloudFlare account email
-  -a=, --apikey=	CloudFlare account API key
-  -z=, --zonename=	Zone name in the form of subdomain.domain.tld
-    OR
-  -y=, --zoneid=	CloudFlare zone ID
-  -r=, --recordname=	Record name in the form of subdomain.domain.tld
-    OR
-  -q=, --recordid=	CloudFlare record ID
-
-OPTIONS
-  -f, --force		Force a DNS update, even if WAN IP hasn't changed
-  -w=, --wan=		Manually specify WAN IP address, skip detection
-  --get-zone-id		Print zone ID corresponding to zone name and exit
-  --get-record-id	Print record ID corresponding to record name and exit
-  -h, --help		Print this message and exit
-ENDHELP`
 
 #Functions
 ###############
@@ -70,6 +73,7 @@ validate_ip_addr () {
         fi
 	return 0
 }
+
 
 get_WAN_addr () {
 	# Go through internal WAN hostnames and get WAN IP, if possible
