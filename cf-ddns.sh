@@ -126,7 +126,7 @@ set_WAN_addr () {
 	    exit 1
         fi
     else
-        WAN_addr=`lookup_WAN_addr`
+        set_WAN_addr `lookup_WAN_addr`
 	return 0
     fi
     return 1
@@ -134,14 +134,30 @@ set_WAN_addr () {
 
 
 get_zone_id () {
-    local zones
+    if [ -z $zone_id ]; then
+	set_zone_id $zone_name
+    fi
+    echo "${zone_id}"
+    return 0
+}
 
-    if [ -z $zone_name ]; then
+# TBD use $1 param in set
+lookup_zone_id () {
+    local zones
+    local zname
+
+    if [ ! -z $1 ]; then
+        zname="${1}"
+    else
+        zname=$zone_name
+    fi
+
+    if [ -z $zname ]; then
         echo "No zone name provided."
         exit 1
     fi
 
-    zones=`${curl_command} -s -X GET "${cf_api_url}/zones?name=${zone_name}" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json"`
+    zones=`${curl_command} -s -X GET "${cf_api_url}/zones?name=${zname}" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json"`
 
     if [ ! "${zones}" ]; then
         echo "Request to API failed during zone lookup."
@@ -154,9 +170,26 @@ get_zone_id () {
         exit 1
     fi
 
-    zone_id=`echo "${zones}" | grep -Po '(?<="id":")[^"]*' | head -1`
+    echo "${zones}" | grep -Po '(?<="id":")[^"]*' | head -1
     return 0
 }
+
+
+set_zone_id () {
+    if [ ! -z $1 ]; then
+        if [ -n "${1##*\.*}"]; then
+	    zone_id=`lookup_zone_id "${1}"`
+            return 0
+        else
+            zone_id="${1}"
+	    return 0
+        fi
+    elif [ -n $zone_name ]; then
+        set_zone_id $zone_name
+	return 0
+    fi
+    return 1
+}	
 
 
 get_record_id () {
@@ -175,7 +208,7 @@ get_record_id () {
 
     # No zone ID? Look it up by name.
     if [ -z $zone_id ] && [ -n $zone_name ]; then
-        get_zone_id
+        set_zone_id $zone_name
     fi
 
     records=`${curl_command} -s -X GET "${cf_api_url}/zones/${zone_id}/dns_records?name=${record_name}&type=A" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json"`
@@ -239,58 +272,51 @@ for key in "$@"; do
     case $key in
     -z=*|--zonename=*)
         zone_name="${key#*=}"
-    shift
+        shift
     ;;
     -r=*|--recordname=*)
         record_name="${key#*=}"
-    shift
+        shift
     ;;
     -y=*|--zoneid=*)
-        zone_id="${key#*=}"
-    shift
+        set_zone_id "${key#*=}"
+        shift
     ;;
     -q=*|--recordid=*)
         record_id="${key#*=}"
-    shift
+        shift
     ;;
     -e=*|--email=*)
         cf_email="${key#*=}"
-    shift
+        shift
     ;;
     -a=*|--apikey=*)
         cf_api_key="${key#*=}"
-    shift
+        shift
     ;;
     -w=*|--wan=*)
         set_WAN_addr "${key#*=}"
-    shift
+        shift
     ;;
     -f|--force)
         force=true
-    shift
+        shift
     ;;
     -t|--test)
-        test_mode=true
-    shift
+        run_mode="test"
+        shift
     ;;
     --get-wan-ip)
-        echo "WAN IP: `get_WAN_addr`"
-        exit 0
-    shift
+        run_mode="get-wan-ip"
+        shift
     ;;
     --get-zone-id)
-        get_zone_id
-        echo "Zone ID for ${zone_name}:"
-        echo "${zone_id}"
-        exit 0
-    shift
+	run_mode="get-zone-id"
+        shift
     ;;
     --get-record-id)
-        get_record_id
-        echo "Record ID for ${zone_name}:"
-        echo "${record_id}"
-        exit 0
-    shift
+        run_mode="get-record-id"
+        shift
     ;;
     -h|--help)
         echo "${helptext}"
@@ -304,15 +330,32 @@ for key in "$@"; do
 done
 
 # Check if curl supports https
-curl_https_check=`curl --version`
+curl_https_check=`${curl_command} --version`
 if [ -n "${curl_https_check##*https*}" ]; then
     echo "Your version of curl doesn't support HTTPS. Exiting."
     exit 1
 fi
 
+case $run_mode in
+    get-wan-ip)
+        echo "WAN IP: `get_WAN_addr`"
+        exit 0
+    ;;
+    get-zone-id)
+	echo "Zone ID for ${zone_name}: `get_zone_id`"
+        exit 0
+    ;;
+    get-record-id)
+        get_record_id
+        echo "Record ID for ${zone_name}:"
+        echo "${record_id}"
+        exit 0
+    ;;
+esac
+
 # If we need to look up a zone/record ID from the names, do so
 if [ -z $zone_id ]; then
-    get_zone_id
+    set_zone_id
 fi
 if [ -z $record_id ]; then
     get_record_id
@@ -329,15 +372,15 @@ if [ -z $WAN_addr ]; then set_WAN_addr; fi
 
 # No change. Stop unless force is specified.
 if [ -n $prev_addr ] && [ "${prev_addr}" = "${WAN_addr}" ] && [ $force = false ]; then
-           echo 'WAN IP appears unchanged. You can force an update with -f.'
-           exit 0
+    echo 'WAN IP appears unchanged. You can force an update with -f.'
+    exit 0
 fi
 
-if [ $test_mode ]; then
-	echo "TEST:	In zone ${zone_name}[${zone_id}],"
-	echo "		update A record ${record_name}[${record_id}]"
-	echo "		to point to ${WAN_addr}"
-	exit 0
+if [ $run_mode = "test" ]; then
+    echo "TEST:	In zone ${zone_name}[${zone_id}],"
+    echo "	update A record ${record_name}[${record_id}]"
+    echo "	to point to ${WAN_addr}"
+    exit 0
 fi
 
 do_record_update
