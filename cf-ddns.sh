@@ -60,7 +60,7 @@ external_WAN_query='https://ifconfig.io/ip'
 storage_dir='/tmp/'
 # Force update if address hasn't changed?
 force=false
-# CloudFlare Zones API (v4) URL
+# CloudFlare API (v4) URL
 cf_api_url='https://api.cloudflare.com/client/v4/'
 #END CONFIGURATION
 
