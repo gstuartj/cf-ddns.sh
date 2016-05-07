@@ -1,6 +1,8 @@
 # cf-ddns.sh
 cf-ddns.sh is a minimal, easy to use DDNS client for automatically updating CloudFlare's DNS service to point to your current IP. It was written with portability in mind, so it will run in most POSIX-like shells. (BASH, ASH, Bourne, BusyBox, etc.) It even works on many embedded systems, like consumer routers.
 
+cf-ddns.sh is based on v4 of the CloudFlare API.
+
 Prerequisites
 ------------
  - curl (with HTTPS support)
