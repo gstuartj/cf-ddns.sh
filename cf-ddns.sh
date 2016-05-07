@@ -77,10 +77,11 @@ validate_ip_addr () {
 }
 
 
-get_WAN_addr () {
+lookup_WAN_addr () {
+    local WAN_lookup
+
     # Go through internal WAN hostnames and get WAN IP, if possible
     for i in $internal_wan_hostnames; do
-        local WAN_lookup
         WAN_lookup=`nslookup ${i} | awk '/^Address: / { print $2 }'`
         if [ -n $WAN_lookup ]; then
             continue
@@ -94,12 +95,11 @@ get_WAN_addr () {
 
     if [ ! $WAN_lookup ]; then
         echo "Couldn't determine WAN IP. Please specify as an argument."
-        WAN_lookup=''
-        exit 1
+        return 1
     fi
 
     if validate_ip_addr $WAN_lookup; then
-        WAN_addr="${WAN_lookup}"
+        echo "${WAN_lookup}"
         return 0
     fi
 
@@ -107,13 +107,40 @@ get_WAN_addr () {
 }
 
 
+get_WAN_addr () {
+    if [ -z $WAN_addr ]; then
+	set_WAN_addr
+    fi
+    echo "${WAN_addr}"
+    return 0
+}
+
+
+set_WAN_addr () {
+    if [ ! -z $1 ]; then
+        if validate_ip_addr $1; then
+	    WAN_addr="${1}"
+            return 0
+        else
+            echo "WAN IP is invalid."
+	    exit 1
+        fi
+    else
+        WAN_addr=`lookup_WAN_addr`
+	return 0
+    fi
+    return 1
+}
+
+
 get_zone_id () {
+    local zones
+
     if [ -z $zone_name ]; then
         echo "No zone name provided."
         exit 1
     fi
 
-    local zones
     zones=`${curl_command} -s -X GET "${cf_api_url}/zones?name=${zone_name}" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json"`
 
     if [ ! "${zones}" ]; then
@@ -133,6 +160,9 @@ get_zone_id () {
 
 
 get_record_id () {
+    local records
+    local records_count
+
     if [ -z $record_name ]; then
         echo "No record name provided."
         exit 1
@@ -148,7 +178,6 @@ get_record_id () {
         get_zone_id
     fi
 
-    local records
     records=`${curl_command} -s -X GET "${cf_api_url}/zones/${zone_id}/dns_records?name=${record_name}&type=A" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json"`
 
     if [ ! "${records}" ]; then
@@ -163,7 +192,6 @@ get_record_id () {
     fi
 
     records=`echo "${records}" | grep -Po '(?<="id":")[^"]*'`
-    local records_count
     records_count=`echo "${records}" | wc -w`
 
     if [ $records_count -gt 1 ]; then
@@ -174,6 +202,29 @@ get_record_id () {
     record_id="${records}"
     return 0
 }
+
+
+do_record_update () {
+    # Perform record update
+    api_dns_update=`${curl_command} -s -X PUT "${cf_api_url}/zones/${zone_id}/dns_records/${record_id}" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json" --data "{\"id\":\"${zone_id}\",\"type\":\"A\",\"name\":\"${record_name}\",\"content\":\"${WAN_addr}\"}"`
+
+    if [ ! "${api_dns_update}" ]; then
+        echo "There was a problem communicating with the API server. Check your connectivity and parameters."
+        echo "${api_dns_update}"
+        exit 1
+    fi
+
+    if [ -n "${api_dns_update##*\"success\":true*}" ]; then
+        echo "Record update failed."
+        echo "${api_dns_update}"
+        exit 1
+    fi
+
+    # Save WAN address to file for comparison on subsequent runs
+    echo "${WAN_addr}" > $prev_addr_file
+    return 0
+}
+
 #End functions
 
 
@@ -211,12 +262,7 @@ for key in "$@"; do
     shift
     ;;
     -w=*|--wan=*)
-        WAN_addr="${key#*=}"
-        if ! validate_ip_addr "${WAN_addr}"; then
-            echo "${WAN_addr} is not a valid WAN IP."
-            WAN_addr=''
-            exit 1
-        fi
+        set_WAN_addr "${key#*=}"
     shift
     ;;
     -f|--force)
@@ -228,8 +274,7 @@ for key in "$@"; do
     shift
     ;;
     --get-wan-ip)
-        get_WAN_addr
-        echo "WAN IP: ${WAN_addr}"
+        echo "WAN IP: `get_WAN_addr`"
         exit 0
     shift
     ;;
@@ -280,13 +325,12 @@ if [ -f $prev_addr_file ]; then
     prev_addr=`cat ${prev_addr_file}`
 fi
 
-if [ -z $WAN_addr ]; then get_WAN_addr; fi
+if [ -z $WAN_addr ]; then set_WAN_addr; fi
 
 # No change. Stop unless force is specified.
 if [ -n $prev_addr ] && [ "${prev_addr}" = "${WAN_addr}" ] && [ $force = false ]; then
            echo 'WAN IP appears unchanged. You can force an update with -f.'
            exit 0
-
 fi
 
 if [ $test_mode ]; then
@@ -296,23 +340,7 @@ if [ $test_mode ]; then
 	exit 0
 fi
 
-# Perform record update
-api_dns_update=`${curl_command} -s -X PUT "${cf_api_url}/zones/${zone_id}/dns_records/${record_id}" -H "X-Auth-Email: ${cf_email}" -H "X-Auth-Key: ${cf_api_key}" -H "Content-Type: application/json" --data "{\"id\":\"${zone_id}\",\"type\":\"A\",\"name\":\"${record_name}\",\"content\":\"${WAN_addr}\"}"`
-
-if [ ! "${api_dns_update}" ]; then
-    echo "There was a problem communicating with the API server. Check your connectivity and parameters."
-    echo "${api_dns_update}"
-    exit 1
-fi
-
-if [ -n "${api_dns_update##*\"success\":true*}" ]; then
-    echo "Record update failed."
-    echo "${api_dns_update}"
-    exit 1
-fi
-
-# Save WAN address to file for comparison on subsequent runs
-echo "${WAN_addr}" > $prev_addr_file
+do_record_update
 
 echo "Record updated."
 
