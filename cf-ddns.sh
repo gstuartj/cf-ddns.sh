@@ -191,7 +191,7 @@ set_zone_id () {
     return 1
 }	
 
-
+#TBD - refactor this like the get/set/lookup_zone_id functions
 get_record_id () {
     local records
     local records_count
@@ -346,7 +346,7 @@ case $run_mode in
         exit 0
     ;;
     get-record-id)
-        get_record_id
+        get_record_id #TBD - refactor
         echo "Record ID for ${zone_name}:"
         echo "${record_id}"
         exit 0
@@ -358,7 +358,7 @@ if [ -z $zone_id ]; then
     set_zone_id
 fi
 if [ -z $record_id ]; then
-    get_record_id
+    get_record_id # TBD - refactor
 fi
 
 # If address from previous update was saved, load it
