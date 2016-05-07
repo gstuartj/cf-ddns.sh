@@ -141,7 +141,7 @@ get_zone_id () {
     return 0
 }
 
-# TBD use $1 param in set
+
 lookup_zone_id () {
     local zones
     local zname
