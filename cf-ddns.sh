@@ -295,7 +295,8 @@ storage_dir=${storage_dir%%+(/)}
 cf_api_url=${cf_api_url%%+(/)}
 
 # Show help and exit if no option was passed in the command line
-if [ -n $@ ]; then
+
+if [ -z "${1}" ]; then
     echo "${helptext}"
     exit 0
 fi
@@ -384,8 +385,7 @@ case $run_mode in
     ;;
     get-record-id)
         get_record_id #TBD - refactor
-        echo "Record ID for ${zone_name}:"
-        echo "${record_id}"
+        echo "Record ID for ${zone_name}: ${record_id}"
         exit 0
     ;;
 esac
@@ -413,7 +413,7 @@ if [ -n $prev_addr ] && [ "${prev_addr}" = "${WAN_addr}" ] && [ $force = false ]
     exit 0
 fi
 
-if [ $run_mode = "test" ]; then
+if [ "$run_mode" = "test" ]; then
     echo "TEST:	In zone ${zone_name}[${zone_id}],"
     echo "	update A record ${record_name}[${record_id}]"
     echo "	to point to ${WAN_addr}"
