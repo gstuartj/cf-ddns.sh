@@ -35,7 +35,7 @@ Options
 ------------
   -f, --force		Force a DNS update, even if WAN IP hasn't changed  
   -t, --test		Test action without updating DNS record  
-  -w=, --wan=		Manually specify WAN IP address, skip detection
+  -w=, --wan=		Manually specify WAN IP address, skip detection  
   --use-lan-ip          Use LAN IP instead of WAN, when updating  
   --get-wan-ip		Determine the WAN IP, print it, and exit  
   --get-zone-id		Print zone ID corresponding to zone name and exit  
