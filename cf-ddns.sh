@@ -22,7 +22,8 @@ Options
   -f, --force		Force a DNS update, even if WAN IP hasn't changed
   -t, --test		Test action without updating DNS record
   -w=, --wan=		Manually specify WAN IP address, skip detection
-  --get-wan-ip		Determine the WAN IP, print it, and exit
+  --use-lan-ip          Use LAN IP instead of WAN, when updating
+  --get-wan-ip		Determine the WAN IP, print it and exit
   --get-zone-id		Print zone ID corresponding to zone name and exit
   --get-record-id	Print record ID corresponding to record name and exit
   -h, --help		Print this message and exit
@@ -43,6 +44,8 @@ zone_id='' # If blank, will be looked up
 record_name=''
 # DNS record ID - if blank, will be looked up using record_name
 record_id=''
+
+use_lan_ip=false
 
 ###############
 #The defaults below should be fine.
@@ -74,6 +77,25 @@ validate_ip_addr () {
         return 1
     fi
     return 0
+}
+
+
+lookup_LAN_addr () {
+    local LAN_lookup
+
+    LAN_lookup=`ip addr | grep 'inet ' | grep -v '127.0.0.1' | awk 'NR==1{print $2}' | awk -F'/' '{print $1}'`
+
+    if [ ! $LAN_lookup ]; then
+        echo "Couldn't determine LAN IP. Please specify as an argument."
+        return 1
+    fi
+
+    if validate_ip_addr $LAN_lookup; then
+        echo "${LAN_lookup}"
+        return 0
+    fi
+
+    return 1
 }
 
 
@@ -126,7 +148,12 @@ set_WAN_addr () {
 	    exit 1
         fi
     else
-        set_WAN_addr `lookup_WAN_addr`
+        if $use_lan_ip; then
+          set_WAN_addr `lookup_LAN_addr`
+        else
+          set_WAN_addr `lookup_WAN_addr`
+        fi
+
 	return 0
     fi
     return 1
@@ -267,6 +294,13 @@ do_record_update () {
 storage_dir=${storage_dir%%+(/)}
 cf_api_url=${cf_api_url%%+(/)}
 
+# Show help and exit if no option was passed in the command line
+
+if [ -z "${1}" ]; then
+    echo "${helptext}"
+    exit 0
+fi
+
 # Get options and arguments from the command line
 for key in "$@"; do
     case $key in
@@ -304,6 +338,10 @@ for key in "$@"; do
     ;;
     -t|--test)
         run_mode="test"
+        shift
+    ;;
+    --use-lan-ip)
+        use_lan_ip=true
         shift
     ;;
     --get-wan-ip)
@@ -347,8 +385,7 @@ case $run_mode in
     ;;
     get-record-id)
         get_record_id #TBD - refactor
-        echo "Record ID for ${zone_name}:"
-        echo "${record_id}"
+        echo "Record ID for ${zone_name}: ${record_id}"
         exit 0
     ;;
 esac
@@ -376,7 +413,7 @@ if [ -n $prev_addr ] && [ "${prev_addr}" = "${WAN_addr}" ] && [ $force = false ]
     exit 0
 fi
 
-if [ $run_mode = "test" ]; then
+if [ "$run_mode" = "test" ]; then
     echo "TEST:	In zone ${zone_name}[${zone_id}],"
     echo "	update A record ${record_name}[${record_id}]"
     echo "	to point to ${WAN_addr}"
