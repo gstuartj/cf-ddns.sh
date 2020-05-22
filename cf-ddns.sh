@@ -290,9 +290,9 @@ do_record_update () {
 
 #Main
 ###############
-# Remove any trailing slashes from storage_dir and cf_api_url
-storage_dir=${storage_dir%%+(/)}
-cf_api_url=${cf_api_url%%+(/)}
+# Remove the last trailing slash from storage_dir and cf_api_url
+storage_dir=${storage_dir%/}
+cf_api_url=${cf_api_url%/}
 
 # Show help and exit if no option was passed in the command line
 
