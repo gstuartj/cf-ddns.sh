@@ -56,9 +56,10 @@ WAN_addr=''
 # Internal hostnames for WAN address lookup
 # - (optional, will fallback to external source)
 internal_wan_hostnames='wan wan-ip wan1-ip'
-# External WAN service. Do not include protocol. HTTPS will be tried first.
+# External WAN service. Ensure only IPv4 addresses are returned as the script does not currently support AAAA records.
 # URL should return ONLY the IP address as a response
-external_WAN_query='https://ifconfig.io/ip'
+external_WAN_query='https://api.ipify.org'
+#external_WAN_query='https://ipv4.icanhazip.com'
 # Where to store the address from our last update. /tmp/ is fine.
 storage_dir='/tmp/'
 # Force update if address hasn't changed?
